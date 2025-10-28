@@ -1,0 +1,31 @@
+name: CI-CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Build Docker Image
+      run: docker build -t portfolio-devops .
+
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Push Image to Azure Container Registry
+      run: |
+        az acr login --name ${{ secrets.ACR_NAME }}
+        docker tag portfolio-devops ${{ secrets.ACR_NAME }}.azurecr.io/portfolio-devops:latest
+        docker push ${{ secrets.ACR_NAME }}.azurecr.io/portfolio-devops:latest
+
+    - name: Deploy to Azure Container Instance
+      run: |
+        az container create           --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }}           --name portfolio-devops           --image ${{ secrets.ACR_NAME }}.azurecr.io/portfolio-devops:latest           --dns-name-label portfolio-devops-demo           --ports 80           --restart-policy Always
