@@ -1,5 +1,4 @@
-# Terraform local files
-.terraform/
+# Ignore Terraform state files
 *.tfstate
-*.tfstate.*
-crash.log
+*.tfstate.backup
+.terraform/
