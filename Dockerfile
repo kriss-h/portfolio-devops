@@ -1,4 +1,12 @@
 FROM nginx:alpine
-COPY . /usr/share/nginx/html
-RUN rm -rf /usr/share/nginx/html/terraform /usr/share/nginx/html/.github || true
+
+# Copy only necessary frontend files to Nginx html directory
+COPY index.html /usr/share/nginx/html/
+COPY style.css /usr/share/nginx/html/
+
+# Optional: copy any other JS or image files if you add them later
+# COPY script.js /usr/share/nginx/html/
+# COPY images/ /usr/share/nginx/html/images/
+
+# Expose port 80 (the default for Nginx)
 EXPOSE 80
