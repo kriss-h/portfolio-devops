@@ -8,7 +8,6 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -22,23 +21,17 @@ jobs:
         run: |
           docker build -t portfolioapp:latest .
 
-      - name: Log in to Azure Container Registry (ACR)
+      - name: Log in to ACR
         run: |
           az acr login --name portfolioregistry123
 
-      - name: Tag and push Docker image to ACR with unique tag
+      - name: Tag and push Docker image to ACR
         run: |
-          IMAGE_TAG=${{ github.run_number }}
-          docker tag portfolioapp:latest portfolioregistry123.azurecr.io/portfolioapp:${IMAGE_TAG}
-          docker push portfolioregistry123.azurecr.io/portfolioapp:${IMAGE_TAG}
-          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
+          docker tag portfolioapp:latest portfolioregistry123.azurecr.io/portfolioapp:latest
+          docker push portfolioregistry123.azurecr.io/portfolioapp:latest
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: portfolio-webapp
-          images: portfolioregistry123.azurecr.io/portfolioapp:${{ env.IMAGE_TAG }}
-
-      - name: Restart Azure Web App to ensure latest image is used
-        run: |
-          az webapp restart --name portfolio-webapp --resource-group <YOUR_RESOURCE_GROUP_NAME>
+          images: portfolioregistry123.azurecr.io/portfolioapp:latest
