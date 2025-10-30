@@ -44,5 +44,5 @@ jobs:
     # Step 6: Deploy to AKS
     - name: Deploy to AKS
       run: |
-        kubectl set image deployment/portfolio-deployment portfolio=${{ secrets.DOCKERHUB_USERNAME }}/portfolio-website:latest --record
-        kubectl rollout status deployment/portfolio-deployment
+        kubectl set image deployment/portfolio-app portfolio=${{ secrets.DOCKERHUB_USERNAME }}/portfolio-website:latest --record
+        kubectl rollout status deployment/portfolio-app
