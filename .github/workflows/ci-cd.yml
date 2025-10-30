@@ -1,4 +1,4 @@
-name: CI-CD Pipeline
+name: CI-CD Pipeline (DockerHub + AKS)
 
 on:
   push:
@@ -10,33 +10,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # Step 1: Checkout code
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    - name: Build Docker Image
-      run: docker build -t portfolio-website .
+    # Step 2: Log in to Docker Hub
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Log in to Azure
+    # Step 3: Build and push Docker image to Docker Hub
+    - name: Build and Push Docker Image
+      run: |
+        IMAGE_NAME=${{ secrets.DOCKERHUB_USERNAME }}/portfolio-website
+        docker build -t $IMAGE_NAME:${{ github.sha }} .
+        docker tag $IMAGE_NAME:${{ github.sha }} $IMAGE_NAME:latest
+        docker push $IMAGE_NAME:${{ github.sha }}
+        docker push $IMAGE_NAME:latest
+
+    # Step 4: Log in to Azure
+    - name: Azure Login
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - name: Log in to Azure Container Registry
-      uses: azure/docker-login@v1
-      with:
-        login-server: ${{ secrets.ACR_NAME }}.azurecr.io
-        username: ${{ secrets.ACR_USERNAME }}
-        password: ${{ secrets.ACR_PASSWORD }}
-
-    - name: Push Image to Azure Container Registry
+    # Step 5: Get AKS credentials
+    - name: Get AKS Credentials
       run: |
-        docker tag portfolio-website ${{ secrets.ACR_NAME }}.azurecr.io/portfolio-website:${{ github.sha }}
-        docker tag portfolio-website ${{ secrets.ACR_NAME }}.azurecr.io/portfolio-website:latest
-        docker push ${{ secrets.ACR_NAME }}.azurecr.io/portfolio-website:${{ github.sha }}
-        docker push ${{ secrets.ACR_NAME }}.azurecr.io/portfolio-website:latest
+        az aks get-credentials --resource-group portfolio-rg --name portfolio-aks --overwrite-existing
 
-    - name: Deploy to Azure App Service
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: ${{ secrets.APP_NAME }}
-        images: ${{ secrets.ACR_NAME }}.azurecr.io/portfolio-website:${{ github.sha }}
+    # Step 6: Deploy to AKS
+    - name: Deploy to AKS
+      run: |
+        kubectl set image deployment/portfolio-deployment portfolio=${{ secrets.DOCKERHUB_USERNAME }}/portfolio-website:latest --record
+        kubectl rollout status deployment/portfolio-deployment
