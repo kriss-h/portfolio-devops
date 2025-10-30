@@ -10,11 +10,16 @@ output "acr_admin_username" {
   value = azurerm_container_registry.acr.admin_username
 }
 
-output "app_service_url" {
-  value = "https://${azurerm_linux_web_app.app_service.default_hostname}"
-}
-
 output "acr_admin_password" {
   value     = azurerm_container_registry.acr.admin_password
+  sensitive = true
+}
+
+output "aks_cluster_name" {
+  value = azurerm_kubernetes_cluster.aks.name
+}
+
+output "kube_config" {
+  value     = azurerm_kubernetes_cluster.aks.kube_config_raw
   sensitive = true
 }
