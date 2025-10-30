@@ -36,6 +36,10 @@ resource "azurerm_linux_web_app" "app_service" {
 
   site_config {
     always_on = true
+    application_stack {
+      docker_image_name = "${azurerm_container_registry.acr.login_server}/${var.docker_image_name}"
+      docker_registry_url = "https://${azurerm_container_registry.acr.login_server}"
+    }
   }
 
   app_settings = {
@@ -43,4 +47,10 @@ resource "azurerm_linux_web_app" "app_service" {
     "DOCKER_ENABLE_CI"                    = "true"
     "WEBSITES_PORT"                       = "80"
   }
+
+  identity {
+    type = "SystemAssigned"
+  }
+
+  depends_on = [azurerm_container_registry.acr]
 }
