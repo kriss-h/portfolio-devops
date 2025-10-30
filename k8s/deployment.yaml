@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: portfolio-app
+  labels:
+    app: portfolio
 spec:
   replicas: 1
   selector:
@@ -13,9 +15,7 @@ spec:
         app: portfolio
     spec:
       containers:
-      name: portfolio-app
-      image: urk22cs1204/portfolio:latest
-      ports:
-        containerPort: 80
-
-
+        - name: portfolio-app
+          image: urk22cs1204/portfolio:latest
+          ports:
+            - containerPort: 80
